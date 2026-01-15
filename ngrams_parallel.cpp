@@ -6,10 +6,8 @@
 // Merge all thread-local maps into the global map (sequential, called after parallel region)
 static void merge_maps(std::vector<WordMap>& local_maps, WordMap& global_map) {
     for (auto& lmap : local_maps) {
-        for (auto it = lmap.begin(); it != lmap.end(); ++it) {
-            const std::string& key = it->first;
-            int count = it->second;
-            global_map[key] = global_map[key] + count;
+        for (auto& [key, count] : lmap) {
+            global_map[key] += count;
         }
     }
 }
@@ -22,15 +20,11 @@ void count_word_bigrams_parallel(const std::vector<std::string>& words, WordMap&
 
     #pragma omp parallel
     {
-        int tid = omp_get_thread_num();
-        WordMap& local = local_maps[tid];
+        WordMap& local = local_maps[omp_get_thread_num()];
 
         #pragma omp for schedule(runtime)
         for (long long i = 0; i < (long long)words.size() - 1; ++i) {
-            std::string key = words[i];
-            key += " ";
-            key += words[i + 1];
-            local[key] = local[key] + 1;
+            local[words[i] + " " + words[i + 1]]++;
         }
     }
 
@@ -45,17 +39,11 @@ void count_word_trigrams_parallel(const std::vector<std::string>& words, WordMap
 
     #pragma omp parallel
     {
-        int tid = omp_get_thread_num();
-        WordMap& local = local_maps[tid];
+        WordMap& local = local_maps[omp_get_thread_num()];
 
         #pragma omp for schedule(runtime)
         for (long long i = 0; i < (long long)words.size() - 2; ++i) {
-            std::string key = words[i];
-            key += " ";
-            key += words[i + 1];
-            key += " ";
-            key += words[i + 2];
-            local[key] = local[key] + 1;
+            local[words[i] + " " + words[i + 1] + " " + words[i + 2]]++;
         }
     }
 
@@ -70,15 +58,12 @@ void count_char_bigrams_parallel(const std::vector<char>& chars, WordMap& global
 
     #pragma omp parallel
     {
-        int tid = omp_get_thread_num();
-        WordMap& local = local_maps[tid];
+        WordMap& local = local_maps[omp_get_thread_num()];
 
         #pragma omp for schedule(runtime)
         for (long long i = 0; i < (long long)chars.size() - 1; ++i) {
-            std::string key = "";
-            key += chars[i];
-            key += chars[i + 1];
-            local[key] = local[key] + 1;
+            std::string key = { chars[i], chars[i + 1] };
+            local[key]++;
         }
     }
 
@@ -93,16 +78,12 @@ void count_char_trigrams_parallel(const std::vector<char>& chars, WordMap& globa
 
     #pragma omp parallel
     {
-        int tid = omp_get_thread_num();
-        WordMap& local = local_maps[tid];
+        WordMap& local = local_maps[omp_get_thread_num()];
 
         #pragma omp for schedule(runtime)
         for (long long i = 0; i < (long long)chars.size() - 2; ++i) {
-            std::string key = "";
-            key += chars[i];
-            key += chars[i + 1];
-            key += chars[i + 2];
-            local[key] = local[key] + 1;
+            std::string key = { chars[i], chars[i + 1], chars[i + 2] };
+            local[key]++;
         }
     }
 
