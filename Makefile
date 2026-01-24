@@ -1,9 +1,9 @@
 # Compiler and flags
 CXX := g++
-CXXFLAGS := -std=c++17 -O3 -march=native -fopenmp
+CXXFLAGS := -std=c++17 -O3 -march=native -fopenmp -Isrc
 
 TARGET := ngram
-SRCS := $(wildcard *.cpp)
+SRCS := $(wildcard src/*.cpp)
 
 # Build
 all:
